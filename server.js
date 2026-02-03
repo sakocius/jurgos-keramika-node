@@ -39,13 +39,13 @@ app.post('/create-checkout-session', async (req, res) => {
 					product_data: {
 						name: `${item.title} (#${item.id})`
 					},
-					unit_amount: item.price * 100
+					unit_amount: Math.ceil(item.price * 100)
 				},
 				quantity: item.count
 			})),
 
-			success_url: 'http://localhost:4200/payment-success',
-			cancel_url: 'http://localhost:4200/payment-cancel'
+			success_url: `${process.env.FRONTEND_URL}/payment-success`,
+			cancel_url: `${process.env.FRONTEND_URL}/payment-cancel`
 		});
 
 		res.json({ url: session.url });
