@@ -5,22 +5,22 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const app = express();
 
-const allowedOrigins = [
-    'http://localhost:4200',
-    'https://jurgoskeramika.lt',
-	'https://jurgos-keramika-ng.vercel.app/'
-];
+const allowedOrigins = ['http://localhost:4200', 'https://jurgoskeramika.lt', 'https://jurgos-keramika-ng.vercel.app'];
 
-app.use(
-    cors({
-        origin: (origin, callback) => {
-            if (!origin || allowedOrigins.includes(origin)) {
-                return callback(null, true);
-            }
-            return callback(new Error('Not allowed by CORS'));
-        }
-    })
-);
+const corsOptions = {
+	origin: (origin, callback) => {
+		if (!origin || allowedOrigins.includes(origin)) {
+			return callback(null, true);
+		}
+		callback(new Error('Not allowed by CORS'));
+	},
+	credentials: true,
+	methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+	allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 app.use(express.json());
 
@@ -72,5 +72,5 @@ app.post('/create-checkout-session', async (req, res) => {
 const port = process.env.PORT || 4242;
 
 app.listen(port, '0.0.0.0', () => {
-    console.log(`Server running on port ${port}`);
+	console.log(`Server running on port ${port}`);
 });
