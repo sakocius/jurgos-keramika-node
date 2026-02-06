@@ -1,20 +1,28 @@
+// @ts-nocheck
 const express = require('express');
-const Stripe = require('stripe');
 const cors = require('cors');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const app = express();
 
-app.use(cors());
-app.use(express.json());
-
-// @ts-ignore
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const allowedOrigins = [
+    'http://localhost:4200',
+    'https://jurgoskeramika.lt',
+	'https://jurgos-keramika-ng.vercel.app/'
+];
 
 app.use(
-	cors({
-		origin: 'http://localhost:4200'
-	})
+    cors({
+        origin: (origin, callback) => {
+            if (!origin || allowedOrigins.includes(origin)) {
+                return callback(null, true);
+            }
+            return callback(new Error('Not allowed by CORS'));
+        }
+    })
 );
+
+app.use(express.json());
 
 app.post('/create-checkout-session', async (req, res) => {
 	try {
