@@ -10,6 +10,12 @@ app.use(express.json());
 // @ts-ignore
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
+app.use(
+	cors({
+		origin: 'http://localhost:4200'
+	})
+);
+
 app.post('/create-checkout-session', async (req, res) => {
 	try {
 		const cartItems = req.body.cartItems ?? [];
