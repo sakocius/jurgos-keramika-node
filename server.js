@@ -69,6 +69,8 @@ app.post('/create-checkout-session', async (req, res) => {
 	}
 });
 
-app.listen(4242, () => {
-	console.log('Server running on port 4242');
+const port = process.env.PORT || 4242;
+
+app.listen(port, '0.0.0.0', () => {
+    console.log(`Server running on port ${port}`);
 });
