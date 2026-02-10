@@ -22,9 +22,6 @@ app.use(
 	})
 );
 
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
-
 app.use(express.json());
 
 app.post('/create-checkout-session', async (req, res) => {
