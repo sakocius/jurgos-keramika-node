@@ -8,6 +8,21 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// get product list from stripe
+app.get("/api/products", async (req, res) => {
+  try {
+    const products = await stripe.products.list({
+      active: true,
+      expand: ["data.default_price"]
+    });
+
+    res.json(products.data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// create checkout session to pay for products
 app.post('/create-checkout-session', async (req, res) => {
 	try {
 		console.log('Received request to create checkout session with body:', req.body);
