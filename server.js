@@ -5,19 +5,22 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const app = express();
 
-const allowedOrigins = ['http://localhost:4200', 'https://jurgoskeramika.lt', 'https://jurgos-keramika-ng.vercel.app'];
+const allowedOrigins = ['http://localhost:4200', 'https://jurgoskeramika.lt', 'https://www.jurgoskeramika.lt', 'https://jurgos-keramika-ng.vercel.app'];
 
-const corsOptions = {
-	origin: (origin, callback) => {
-		if (!origin || allowedOrigins.includes(origin)) {
-			return callback(null, true);
-		}
-		callback(new Error('Not allowed by CORS'));
-	},
-	credentials: true,
-	methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-	allowedHeaders: ['Content-Type', 'Authorization']
-};
+app.use(
+	cors({
+		origin: (origin, callback) => {
+			if (!origin) return callback(null, true);
+
+			if (allowedOrigins.some((o) => origin.startsWith(o))) {
+				return callback(null, true);
+			}
+
+			return callback(null, false);
+		},
+		credentials: true
+	})
+);
 
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
