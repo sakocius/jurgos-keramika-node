@@ -5,33 +5,12 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const app = express();
 
-const allowedOrigins = ['http://localhost:4200', 'https://jurgoskeramika.lt', 'https://www.jurgoskeramika.lt', 'https://jurgos-keramika-ng.vercel.app'];
-
-// app.use(
-// 	cors({
-// 		origin: (origin, callback) => {
-// 			if (!origin) return callback(null, true);
-
-// 			if (allowedOrigins.some((o) => origin.startsWith(o))) {
-// 				return callback(null, true);
-// 			}
-
-// 			return callback(null, false);
-// 		},
-// 		credentials: true
-// 	})
-// );
-
-app.use(
-	cors({
-		origin: '*'
-	})
-);
-
+app.use(cors());
 app.use(express.json());
 
 app.post('/create-checkout-session', async (req, res) => {
 	try {
+		console.log('Received request to create checkout session with body:', req.body);
 		const cartItems = req.body.cartItems ?? [];
 
 		const session = await stripe.checkout.sessions.create({
