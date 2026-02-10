@@ -7,18 +7,24 @@ const app = express();
 
 const allowedOrigins = ['http://localhost:4200', 'https://jurgoskeramika.lt', 'https://www.jurgoskeramika.lt', 'https://jurgos-keramika-ng.vercel.app'];
 
+// app.use(
+// 	cors({
+// 		origin: (origin, callback) => {
+// 			if (!origin) return callback(null, true);
+
+// 			if (allowedOrigins.some((o) => origin.startsWith(o))) {
+// 				return callback(null, true);
+// 			}
+
+// 			return callback(null, false);
+// 		},
+// 		credentials: true
+// 	})
+// );
+
 app.use(
 	cors({
-		origin: (origin, callback) => {
-			if (!origin) return callback(null, true);
-
-			if (allowedOrigins.some((o) => origin.startsWith(o))) {
-				return callback(null, true);
-			}
-
-			return callback(null, false);
-		},
-		credentials: true
+		origin: '*'
 	})
 );
 
