@@ -36,7 +36,7 @@ app.post('/stripe-payment-webhook', express.raw({ type: 'application/json' }), a
 				await conn.beginTransaction();
 
 				for (const item of cartItems) {
-					const [result] = await conn.execute('UPDATE products SET count = count - ? WHERE id = ? AND count >= ?', [item.count, item.id, item.count]);
+					const [result] = await conn.execute('UPDATE products SET stock = stock - ? WHERE id = ? AND stock >= ?', [item.count, item.id, item.count]);
 
 					if (result.affectedRows === 0) {
 						throw new Error(`Insufficient stock for product ${item.id}`);
