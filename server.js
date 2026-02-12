@@ -7,6 +7,56 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const app = express();
 
 app.use(cors());
+
+app.post('/stripe-payment-webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+	const signature = req.headers['stripe-signature'];
+
+	let event;
+	try {
+		event = stripe.webhooks.constructEvent(req.body, signature, process.env.STRIPE_WEBHOOK_SECRET);
+	} catch (err) {
+		return res.status(400).send(`Webhook Error: ${err.message}`);
+	}
+
+	if (event.type === 'checkout.session.completed') {
+		const session = event.data.object;
+
+		let cartItems = [];
+		if (session.metadata && session.metadata.cart) {
+			try {
+				cartItems = JSON.parse(session.metadata.cart);
+			} catch (err) {
+				console.error('Invalid cart metadata JSON', err);
+			}
+		}
+
+		if (cartItems.length > 0) {
+			const conn = await pool.getConnection();
+			try {
+				await conn.beginTransaction();
+
+				for (const item of cartItems) {
+					const [result] = await conn.execute('UPDATE products SET count = count - ? WHERE id = ? AND count >= ?', [item.count, item.id, item.count]);
+
+					if (result.affectedRows === 0) {
+						throw new Error(`Insufficient stock for product ${item.id}`);
+					}
+				}
+
+				await conn.commit();
+			} catch (err) {
+				await conn.rollback();
+				console.error('Inventory update failed', err);
+				return res.status(500).send('Inventory update failed');
+			} finally {
+				conn.release();
+			}
+		}
+	}
+
+	res.json({ received: true });
+});
+
 app.use(express.json());
 
 // Create connection pool (recommended for production)
@@ -19,6 +69,22 @@ const pool = mysql.createPool({
 	waitForConnections: true,
 	connectionLimit: 10,
 	queueLimit: 0
+});
+
+// GET all product images from sql
+app.get('/api/product-images', async (req, res) => {
+	try {
+		const [rows] = await pool.execute('SELECT * FROM product_images');
+
+		if (rows.length === 0) {
+			return res.status(404).json({ message: 'Not found' });
+		}
+
+		res.json(rows);
+	} catch (error) {
+		console.error(error);
+		res.status(500).json({ message: 'Server error' });
+	}
 });
 
 // GET all products from sql
@@ -93,6 +159,9 @@ app.post('/create-checkout-session', async (req, res) => {
 				}
 			],
 			mode: 'payment',
+			metadata: {
+				cart: JSON.stringify(cartItems)
+			},
 			// @ts-ignore
 			line_items: cartItems.map((item) => ({
 				price_data: {
