@@ -1,5 +1,6 @@
 // @ts-nocheck
 const express = require('express');
+const mysql = require('mysql2/promise');
 const cors = require('cors');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
@@ -8,18 +9,64 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// get product list from stripe
-app.get("/api/products", async (req, res) => {
-  try {
-    const products = await stripe.products.list({
-      active: true,
-      expand: ["data.default_price"]
-    });
+// Create connection pool (recommended for production)
+const pool = mysql.createPool({
+	host: process.env.DB_HOST,
+	port: process.env.DB_PORT,
+	user: process.env.DB_USER,
+	password: process.env.DB_PASSWORD,
+	database: process.env.DB_NAME,
+	waitForConnections: true,
+	connectionLimit: 10,
+	queueLimit: 0
+});
 
-    res.json(products.data);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+// GET all products from sql
+app.get('/api/products', async (req, res) => {
+	try {
+		const [rows] = await pool.execute('SELECT * FROM products');
+
+		if (rows.length === 0) {
+			return res.status(404).json({ message: 'Not found' });
+		}
+
+		res.json(rows);
+	} catch (error) {
+		console.error(error);
+		res.status(500).json({ message: 'Server error' });
+	}
+});
+
+// GET products from sql by ID
+app.get('/api/products/:id', async (req, res) => {
+	try {
+		const { id } = req.params;
+
+		const [rows] = await pool.execute('SELECT * FROM products WHERE id = ?', [id]);
+
+		if (rows.length === 0) {
+			return res.status(404).json({ message: 'Not found' });
+		}
+
+		res.json(rows[0]);
+	} catch (error) {
+		console.error(error);
+		res.status(500).json({ message: 'Server error' });
+	}
+});
+
+// get product list from stripe
+app.get('/api/stripe/products', async (req, res) => {
+	try {
+		const products = await stripe.products.list({
+			active: true,
+			expand: ['data.default_price']
+		});
+
+		res.json(products.data);
+	} catch (err) {
+		res.status(500).json({ error: err.message });
+	}
 });
 
 // create checkout session to pay for products
