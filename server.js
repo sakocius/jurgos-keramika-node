@@ -3,7 +3,7 @@ const express = require('express');
 const mysql = require('mysql2/promise');
 const cors = require('cors');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-const Resend = require('resend');
+import { Resend } from 'resend';
 
 const app = express();
 
@@ -150,7 +150,7 @@ app.post('/api/contact', async (req, res) => {
 
 	try {
 		await resend.emails.send({
-			from: email,
+			from: 'no-reply@jurgoskeramika.com',
 			to: 'j.grigariene@gmail.com',
 			subject: `Nauja žinutė nuo ${name}`,
 			reply_to: email,
