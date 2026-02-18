@@ -3,22 +3,13 @@ const express = require('express');
 const mysql = require('mysql2/promise');
 const cors = require('cors');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-const nodemailer = require('nodemailer');
+const resend = require('resend');
 
 const app = express();
 
 app.use(cors());
 
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,
-  family: 4,               // 👈 FORCE IPv4
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS
-  }
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 app.post('/stripe-payment-webhook', express.raw({ type: 'application/json' }), async (req, res) => {
 	const signature = req.headers['stripe-signature'];
@@ -157,14 +148,20 @@ app.post('/api/contact', async (req, res) => {
 		Telefonas: ${phone ?? 'nepateiktas'}
 		Žinutė: ${message}`;
 
-	await transporter.sendMail({
-		to: 'j.grigariene@gmail.com',
-		from: email,
-		subject: `Žinutė nuo ${name}`,
-		text: messageFormatted
-	});
+	try {
+		await resend.emails.send({
+			from: email,
+			to: 'j.grigariene@gmail.com',
+			subject: `Nauja žinutė nuo ${name}`,
+			reply_to: email,
+			text: messageFormatted
+		});
 
-	res.send({ success: true });
+		res.json({ success: true });
+	} catch (err) {
+		console.error('Email failed:', err);
+		res.status(500).json({ success: false });
+	}
 });
 
 // create checkout session to pay for products
