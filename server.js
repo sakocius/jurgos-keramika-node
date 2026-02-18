@@ -3,7 +3,7 @@ const express = require('express');
 const mysql = require('mysql2/promise');
 const cors = require('cors');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-import nodemailer from 'nodemailer';
+const nodemailer = require('nodemailer');
 
 const app = express();
 
