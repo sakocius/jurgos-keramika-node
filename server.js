@@ -3,10 +3,21 @@ const express = require('express');
 const mysql = require('mysql2/promise');
 const cors = require('cors');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+import nodemailer from 'nodemailer';
 
 const app = express();
 
 app.use(cors());
+
+const transporter = nodemailer.createTransport({
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false,
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS
+  }
+});
 
 app.post('/stripe-payment-webhook', express.raw({ type: 'application/json' }), async (req, res) => {
 	const signature = req.headers['stripe-signature'];
