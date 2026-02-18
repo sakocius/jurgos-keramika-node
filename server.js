@@ -143,10 +143,12 @@ app.get('/api/stripe/products', async (req, res) => {
 app.post('/api/contact', async (req, res) => {
 	const { name, email, phone, message } = req.body;
 
-	const messageFormatted = `Vardas: ${name}
-		El. paštas: ${email ?? 'nepateiktas'}
-		Telefonas: ${phone ?? 'nepateiktas'}
-		Žinutė: ${message}`;
+	const messageFormatted = `
+	Vardas: ${name}
+	El. paštas: ${email ?? 'nepateiktas'}
+	Telefonas: ${phone ?? 'nepateiktas'}
+	Žinutė: ${message}
+	`;
 
 	try {
 		await resend.emails.send({
