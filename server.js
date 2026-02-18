@@ -135,11 +135,32 @@ app.get('/api/stripe/products', async (req, res) => {
 	}
 });
 
+// send email from contact form
+
+app.post('/api/contact', async (req, res) => {
+	const { name, email, phone, message } = req.body;
+
+	const messageFormatted = `Vardas: ${name}
+		El. paštas: ${email ?? 'nepateiktas'}
+		Telefonas: ${phone ?? 'nepateiktas'}
+		Žinutė: ${message}`;
+
+	await transporter.sendMail({
+		to: 'j.grigariene@gmail.com',
+		from: email,
+		subject: `Žinutė nuo ${name}`,
+		text: messageFormatted
+	});
+
+	res.send({ success: true });
+});
+
 // create checkout session to pay for products
 app.post('/create-checkout-session', async (req, res) => {
 	try {
 		console.log('Received request to create checkout session with body:', req.body);
 		const cartItems = req.body.cartItems ?? [];
+		const shippingCost = (req.body.shippingCost ?? 10) * 100; // Default to 10 EUR if not provided
 
 		const session = await stripe.checkout.sessions.create({
 			payment_method_types: ['card'],
@@ -151,7 +172,7 @@ app.post('/create-checkout-session', async (req, res) => {
 					shipping_rate_data: {
 						type: 'fixed_amount',
 						fixed_amount: {
-							amount: 1000,
+							amount: shippingCost,
 							currency: 'eur'
 						},
 						display_name: 'Standard'
