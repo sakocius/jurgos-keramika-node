@@ -150,7 +150,7 @@ app.post('/api/contact', async (req, res) => {
 
 	try {
 		await resend.emails.send({
-			from: 'no-reply@jurgoskeramika.com',
+			from: 'noreply@veliiryeno.resend.app',
 			to: 'j.grigariene@gmail.com',
 			subject: `Nauja žinutė nuo ${name}`,
 			reply_to: email,
